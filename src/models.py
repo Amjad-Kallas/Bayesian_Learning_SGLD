@@ -37,12 +37,4 @@ class BayesianLogisticRegression:
 
         return log_likelihood + log_prior
 
-    '''def predict(self, X):
-
-        z = X @ self.theta
-
-        probs = self.sigmoid(z)
-
-        return np.where(probs > 0.5, 1, -1)'''
-
 
