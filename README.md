@@ -5,7 +5,7 @@ A small Python project demonstrating Bayesian learning with Stochastic Gradient 
 ## Contents
 
 - `src/` — Python modules and experiment scripts
-- `notebooks/` — Jupyter notebooks for logistic regression and demo exploration
+- `notebooks/` — Jupyter notebooks for all experiments
 - `requirements.txt` — project dependencies
 
 ## Setup
@@ -22,9 +22,9 @@ A small Python project demonstrating Bayesian learning with Stochastic Gradient 
 
 ## Run
 
-- `python src/experiments/logistic_regression.py`
-- `python src/experiments/simple_demo.py`
-- `python src/experiments/ica.py`
+- `python -m src.experiments.logistic_regression`
+- `python -m src.experiments.simple_demo`
+- `python -m src.experiments.ica`
 
 ## Notebooks
 - `simple_demo.ipynb`
