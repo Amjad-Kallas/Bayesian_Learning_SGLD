@@ -6,6 +6,7 @@ from src.optimizers import SGLD
 
 class SimpleDemo:
     def __init__(self, N=100, seed=0):
+        """Create a toy mixture-model demo with synthetic data and simulation methods."""
         self.N = N
         self.seed = seed
         self.X = self._generate_data()
@@ -14,6 +15,7 @@ class SimpleDemo:
     # Data + Model
     # ==========================================
     def _generate_data(self):
+        """Generate synthetic mixture data used by the demo."""
         np.random.seed(self.seed)
 
         theta1_true = 0.0
@@ -31,14 +33,17 @@ class SimpleDemo:
         return np.array(X)
 
     def grad_log_prior(self, theta):
+        """Compute the gradient of the Gaussian prior for the model parameters."""
         theta1, theta2 = theta
         return np.array([-theta1 / 10.0, -theta2 / 1.0])
 
     def log_prior(self, theta):
+        """Evaluate the log prior probability for the model parameters."""
         theta1, theta2 = theta
         return -0.5 * (theta1**2 / 10.0 + theta2**2)
 
     def grad_log_likelihood(self, theta, x):
+        """Compute the gradient of the log likelihood for a single observation."""
         theta1, theta2 = theta
         sigma2 = 2.0
 
@@ -56,6 +61,7 @@ class SimpleDemo:
         return np.array([d_theta1, d_theta2])
 
     def log_likelihood(self, theta):
+        """Compute the log likelihood of the full dataset under the mixture model."""
         theta1, theta2 = theta
         sigma2 = 2.0
 
@@ -69,9 +75,11 @@ class SimpleDemo:
         return np.sum(np.log(0.5 * p1 + 0.5 * p2))
 
     def full_log_posterior(self, theta):
+        """Return the sum of the log prior and the log likelihood."""
         return self.log_prior(theta) + self.log_likelihood(theta)
 
     def full_grad_log_posterior(self, theta):
+        """Compute the gradient of the full log posterior across the dataset."""
         g_prior = self.grad_log_prior(theta)
         g_lik = np.sum([self.grad_log_likelihood(theta, x) for x in self.X], axis=0)
         return g_prior + g_lik
@@ -80,6 +88,7 @@ class SimpleDemo:
     # Experiments
     # ==========================================
     def run_sgld(self, total_iterations=1000000, burn_in=10000):
+        """Run SGLD sampling and return posterior samples plus noise diagnostics."""
         theta = np.array([0.0, 0.0])
         optimizer = SGLD(a=0.1934, b=231, gamma=0.55)
 
@@ -122,6 +131,7 @@ class SimpleDemo:
         }
 
     def run_rejection(self, total_iterations=100000):
+        """Run a Metropolis-style rejection sampler and return rejection statistics."""
         theta = np.array([0.0, 0.0])
 
         rejection_rates, step_sizes = [], []
@@ -171,6 +181,7 @@ class SimpleDemo:
     # Plotting
     # ==========================================
     def plot_posterior(self, samples):
+        """Plot the true posterior contour and the estimated SGLD posterior density."""
         fig1, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
         
         t1_grid = np.linspace(-1.5, 2.5, 100)
@@ -207,6 +218,7 @@ class SimpleDemo:
         plt.show()
 
     def plot_diagnostics(self, sgld_res, rej_res):
+        """Plot SGLD noise diagnostics and rejection rate versus step size."""
         fig2, (ax3, ax4) = plt.subplots(1, 2, figsize=(12, 5))
         
         ax3.plot(sgld_res["iters"], sgld_res["var_g1"], label=r'$\nabla\theta_1$ noise', color='blue', alpha=0.7)

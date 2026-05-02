@@ -3,7 +3,6 @@ import numpy as np
 class BayesianLogisticRegression:
 
     def __init__(self, dim):
-        # self.theta = np.zeros(dim)
         self.theta = np.random.normal(0, 2, size=dim)
 
     def sigmoid(self, z):
