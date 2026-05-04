@@ -131,14 +131,15 @@ class ICA:
         print(f"Final Acceptance Rate: {accepts / steps:.4f}")
         samples = samples[10000:]
         samples = samples[::30]  # thinning
+        sample_iters = np.arange(10000, 10000 + len(samples) * 30, 30)
 
-        return W, np.array(samples)
+        return W, np.array(samples), sample_iters
 
     # ------------------------------------------------------------------
     # Plotting
     # ------------------------------------------------------------------
 
-    def plot_amari_distances(self, samples, A, sample_iters, experiment=""):
+    def plot_amari_distances(self, samples, A, sample_iters, experiment="", ax=None):
         """Plot raw and online-averaged Amari distances over sampling iterations."""
         distances = []
 
@@ -158,16 +159,22 @@ class ICA:
         smoothed = self._moving_average(distances)
         online_avg = np.cumsum(distances) / np.arange(1, len(distances) + 1)
 
-        plt.plot(sample_iters[100:], online_avg[100:], linewidth=1.3, label="Online avg", color='g')
-        plt.plot(sample_iters[100:len(smoothed)], smoothed[100:], alpha=0.7, linewidth=0.7, label="Raw", color='b')
-        plt.xlim(0, 100000)
-        plt.xlabel("Iterations")
-        plt.ylabel("Amari Distance")
-        plt.title(f"Amari Distance {experiment}")
-        plt.show()
+        standalone = ax is None
+        if standalone:
+            _, ax = plt.subplots()
+
+        ax.plot(sample_iters[100:], online_avg[100:], linewidth=1.3, label="Online avg", color='g')
+        ax.plot(sample_iters[100:len(smoothed)], smoothed[100:], alpha=0.7, linewidth=0.7, label="Raw", color='b')
+        ax.set_xlabel("Iterations")
+        ax.set_ylabel("Amari Distance")
+        ax.set_title(f"Amari Distance {experiment}")
+        ax.legend()
+
+        if standalone:
+            plt.show()
 
     @staticmethod
-    def plot_instability(samples, X, experiment):
+    def plot_instability(samples, X, experiment, ax=None):
         """Plot per-component instability (Eq. 21) sorted descending."""
         var_W = np.var(samples, axis=0)  # Shape: (D, D)
         var_X = np.var(X, axis=0)        # Shape: (D,)
@@ -179,12 +186,17 @@ class ICA:
 
         D = X.shape[1]
 
-        plt.figure(figsize=(6, 4))
-        plt.bar(range(1, D + 1), sorted_instability, color='navy')
-        plt.xlabel("Sorted Component ID")
-        plt.ylabel("Instability Metric")
-        plt.title(experiment)
-        plt.show()
+        standalone = ax is None
+        if standalone:
+            _, ax = plt.subplots(figsize=(6, 4))
+
+        ax.bar(range(1, D + 1), sorted_instability, color='navy')
+        ax.set_xlabel("Sorted Component ID")
+        ax.set_ylabel("Instability Metric")
+        ax.set_title(experiment)
+
+        if standalone:
+            plt.show()
 
     @staticmethod
     def plot_2d_pdfs(samples, experiment_name):
@@ -281,21 +293,25 @@ if __name__ == "__main__":
 
     print("\n--- Running SGLD ---")
     # The paper used a batch size of 100 for 500,000 iterations [cite: 329]
-    W_sgld, samples_sgld, iters_sgld = ica.run_sgld(X, steps=20000, batch_size=100)
+    W_sgld, samples_sgld, iters_sgld = ica.run_sgld(X, steps=50000, batch_size=100)
 
     print("\n--- Running Corrected Langevin ---")
     # Initialize with the final W from SGLD to force them into the same local maximum [cite: 333]
-    W_corr, samples_corr = ica.run_corrected_langevin(X, W_init=W_sgld, steps=20000)
+    W_corr, samples_corr, iters_corr = ica.run_corrected_langevin(X, W_init=W_sgld, steps=50000)
 
-    # plot_amari_distances(samples_sgld, A, iters_sgld)
+    print("\n--- Plotting Amari Distances ---")
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+    ica.plot_amari_distances(samples_sgld, A, iters_sgld, experiment="Stoc. Lan.", ax=axes[0])
+    ica.plot_amari_distances(samples_corr, A, iters_corr, experiment="Corr. Lan.", ax=axes[1])
+    plt.tight_layout()
+    plt.show()
 
-    iters_corr = np.arange(len(samples_corr))
-
-    # print("-> Corrected Langevin Amari Distances")
-    # ica.plot_amari_distances(samples_corr, A, iters_corr)
-
-    ICA.plot_instability(samples_sgld, X, "sgld")
-    ICA.plot_instability(samples_corr, X, "corr")
+    print("\n--- Plotting Instability ---")
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    ICA.plot_instability(samples_sgld, X, "Instability SGLD", ax=axes[0])
+    ICA.plot_instability(samples_corr, X, "Instability Corrected Lan.", ax=axes[1])
+    plt.tight_layout()
+    plt.show()
 
     # ICA.plot_2d_pdfs(samples_sgld, "Stoc. Lan.")
     # ICA.plot_2d_pdfs(samples_corr, "Corr. Lan.")
