@@ -3,6 +3,7 @@ from scipy.stats import gaussian_kde
 import matplotlib.pyplot as plt
 from src.optimizers import SGLD
 
+np.random.seed(1)
 
 class SimpleDemo:
     def __init__(self, N=100, seed=0):

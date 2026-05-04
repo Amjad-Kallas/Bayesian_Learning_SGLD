@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 
 from scipy.stats import gaussian_kde
 
+np.random.seed(1)
 
 class ICA:
     """Bayesian ICA via SGLD and Corrected Langevin sampling."""

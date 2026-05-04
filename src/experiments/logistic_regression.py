@@ -4,6 +4,7 @@ from src.optimizers import SGLD
 from src.models import BayesianLogisticRegression
 import matplotlib.pyplot as plt
 
+np.random.seed(1)
 
 
 
